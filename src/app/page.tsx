@@ -1,69 +1,99 @@
-import Image from "next/image";
+import Link from "next/link";
+import { Card, SetupNotice } from "@/components/ui";
+import { overview } from "@/lib/data";
+import { CRITERIA } from "@/lib/rubric";
 
-export default function Home() {
+const ROLES = [
+  { role: "PM" as const, slug: "pm", title: "Product Manager" },
+  { role: "SPM" as const, slug: "spm", title: "Senior Product Manager" },
+];
+
+export default async function Home() {
+  let stats: Awaited<ReturnType<typeof overview>>;
+  try {
+    stats = await overview();
+  } catch (e) {
+    return <SetupNotice error={e} />;
+  }
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <div className="space-y-8">
+      <div>
+        <h1 className="text-2xl font-semibold tracking-tight">Open roles</h1>
+        <p className="mt-1 text-sm text-muted">
+          Candidates are ranked by how closely they match what Kargo&apos;s best hires have in common, not by how well
+          they match the JD.
+        </p>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2">
+        {ROLES.map(({ role, slug, title }) => {
+          const s = stats[role];
+          return (
+            <Link key={role} href={`/roles/${slug}`} className="block">
+              <Card className="h-full transition hover:border-ink/30">
+                <div className="flex items-baseline justify-between">
+                  <h2 className="text-lg font-semibold">{title}</h2>
+                  <span className="text-sm text-muted">{s.total} scored</span>
+                </div>
+                <dl className="mt-4 grid grid-cols-3 gap-2 text-center">
+                  <div className="rounded bg-good-bg py-2">
+                    <dt className="text-xs text-good">Shortlist</dt>
+                    <dd className="text-xl font-semibold text-good">{s.shortlist}</dd>
+                  </div>
+                  <div className="rounded bg-warn-bg py-2">
+                    <dt className="text-xs text-warn">Second look</dt>
+                    <dd className="text-xl font-semibold text-warn">{s.secondLook}</dd>
+                  </div>
+                  <div className="rounded bg-bad-bg py-2">
+                    <dt className="text-xs text-bad">Decline</dt>
+                    <dd className="text-xl font-semibold text-bad">{s.decline}</dd>
+                  </div>
+                </dl>
+                <p className="mt-4 text-sm">
+                  {s.undecided > 0 ? (
+                    <>
+                      <span className="font-medium">{s.undecided}</span> waiting for Advance or Pass
+                    </>
+                  ) : (
+                    <span className="text-muted">Nothing waiting on you</span>
+                  )}
+                </p>
+              </Card>
+            </Link>
+          );
+        })}
+      </div>
+
+      <Card>
+        <h2 className="font-semibold">What the ranking looks for</h2>
+        <p className="mt-1 text-sm text-muted">
+          Four of Kargo&apos;s five strongest hires never held a PM title. What they share is behaviour:
+        </p>
+        <ol className="mt-3 grid gap-2 text-sm md:grid-cols-2">
+          {CRITERIA.map((c) => (
+            <li key={c.key} className="flex gap-2">
+              <span className="font-mono text-muted">{c.key}</span>
+              {c.name}
+            </li>
+          ))}
+        </ol>
+        <Link href="/pattern" className="mt-4 inline-block text-sm text-accent underline">
+          See how this was learned from past hires
+        </Link>
+      </Card>
+
+      {stats.PM.total + stats.SPM.total === 0 && (
+        <Card>
+          <p className="text-sm">
+            No candidates yet.{" "}
+            <Link href="/upload" className="text-accent underline">
+              Add CVs
+            </Link>{" "}
+            to get a ranked shortlist.
           </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+        </Card>
+      )}
     </div>
   );
 }

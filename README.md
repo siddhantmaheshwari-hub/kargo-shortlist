@@ -1,36 +1,68 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Kargo Shortlist
 
-## Getting Started
+Ranks Product Manager and Senior PM candidates for Kargo against the pattern Kargo's best past hires
+share, instead of against the JD. For each candidate it writes a brief (who they are, why they ranked
+there, what to probe). Arjun clicks **Advance** or **Pass**, and the invite or rejection email is
+drafted and sent.
 
-First, run the development server:
+Stack: Next.js 16 (App Router) · Supabase (Postgres) · Gemini · Resend · Vercel.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## How the ranking works
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+The pattern is `rubric.txt` (Kargo CV Scoring Rubric v2), learned from the 8 past hires in `hires/`:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+| | Criterion | PM | SPM |
+|---|---|---|---|
+| A | Hands-on operations exposure | 30% | 25% |
+| B | Unprompted fix, adopted by others | 30% | 30% |
+| C | Resolves live breakdowns personally | 25% | 30% |
+| D | Absorbs extra load without asking for more people | 15% | 15% |
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. **Gemini reads the CV** and proposes a 0–3 level per criterion, a verbatim evidence quote, and an
+   "unclear" (?) flag (`src/lib/assess.ts`).
+2. **Code enforces the rubric** (`src/lib/evidence.ts`, `src/lib/rubric.ts`):
+   - Evidence the CV doesn't actually contain is downgraded to a "?" 1. A "?" is always a 1, never a 0.
+   - SPM levels are derived from PM levels (a PM-level 3 is an SPM 2 unless the SPM bar is met).
+   - Totals, bands, and the Spike / Unclear / Cross-route overrides are computed deterministically.
+   - The only knockout is a CV that explicitly rules out Mumbai. If the CV doesn't say, the brief adds a relocation probe.
+   - Titles, years, degrees, companies and tools are never scored.
+3. **Ranking:** band, then total, then number of 3s. Cross-routed SPM applicants appear on the PM list.
+4. **Brief:** Gemini explains the computed scores (it can't change them). The rubric's standard probes
+   are always added for any 1 or "?".
+5. **Calibration** (`/pattern`): the 8 past hires go through the same scorer, to check that thriving
+   hires (Exceeds) separate from Meets/Below.
 
-## Learn More
+`npm test` runs the rubric maths against the calibration table in `rubric.txt`.
 
-To learn more about Next.js, take a look at the following resources:
+## Emails
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Clicking Advance or Pass drafts the email (Gemini, with a template fallback) and sends it after an
+8-second undo window. **With `RESEND_API_KEY` blank, every email is saved as a draft** in `/outbox`.
+Once you add the key, use "Send unsent" there. Set `TEST_RECIPIENT_EMAIL` to redirect all mail to
+yourself while testing. Resend's `onboarding@resend.dev` sender can only deliver to your own Resend
+account address, so verify a domain before emailing real candidates.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Setup
 
-## Deploy on Vercel
+1. Create a Supabase project and run `supabase/schema.sql` in its SQL editor. RLS is on with no
+   public policies, so only the server (service role key) can read candidate data.
+2. `cp .env.example .env` and fill in `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `GEMINI_API_KEY`.
+3. `npm install`
+4. `npm run seed` loads the past hires from `hires/`.
+5. `npm run dev`, open `/pattern` and click **Run calibration**.
+6. Add CVs at `/upload` (.docx, .pdf, .txt, or pasted text).
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Deploying to Vercel
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Add the same env vars in the Vercel project, plus **`APP_PASSWORD`**. The app is behind HTTP basic
+auth (any username, that password), because it holds candidate CVs and can send email. A production
+deployment without `APP_PASSWORD` refuses all requests.
+
+## Pages
+
+- `/`: both roles at a glance
+- `/roles/pm`, `/roles/spm`: ranked lists with Advance / Pass
+- `/candidates/[id]`: brief, scorecard with CV evidence, email
+- `/upload`: add CVs
+- `/pattern`: the success pattern and calibration against past hires
+- `/outbox`: every drafted and sent email
