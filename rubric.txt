@@ -1,0 +1,246 @@
+KARGO CV SCORING RUBRIC (v2)
+Product Manager (PM) and Senior Product Manager (SPM)
+Built to avoid false rejections
+=====================================================================
+
+Why this rubric looks the way it does
+-------------------------------------
+Most of Kargo's best hires would fail a typical screen. Rohan, Sunita,
+Aditya and Meghna were all rated Exceeds Expectations, and none held a
+PM title. So this rubric scores BEHAVIOUR WHEREVER IT APPEARS (any role,
+any function, any industry) and routes borderline candidates to a second
+look instead of a rejection.
+
+Every criterion traces to specific lines in the past-hire profiles
+(Exceeds: Rohan, Sunita, Aditya, Meghna, Lavanya; Meets/Below: Vikram,
+Rahul, Preetham).
+
+
+=====================================================================
+HOW TO SCREEN ONE CV (about 5 minutes)
+=====================================================================
+
+1. Eligibility check. The only knockout is: Mumbai-based or willing to
+   relocate. Nothing else ends a candidate's chances at this stage.
+
+2. Score each criterion 0-3 using the anchors below. Score only what the
+   CV states.
+
+3. If the CV hints at something but is unclear, give it a 1 and mark it
+   "?". Never give a 0 for something vaguely described. A 0 means the
+   behaviour is absent, not unclear.
+
+4. Calculate the total:
+      (score / 3) x weight, summed across the four criteria.
+
+5. Apply the bands and override rules.
+
+6. Write down the CV phrase that justifies each score. This becomes the
+   record of why each candidate was shortlisted or declined.
+
+NEVER SCORE: titles, years of experience, degree, company names,
+certifications, tool lists, or adjectives in the summary.
+
+
+=====================================================================
+THE FOUR CRITERIA
+=====================================================================
+
+A PM-level 3 counts as a 2 on the SPM rubric. The "3 (SPM)" line shows
+the extra bar needed for a 3 on the SPM rubric.
+
+
+---------------------------------------------------------------------
+A. HANDS-ON OPERATIONS EXPOSURE
+---------------------------------------------------------------------
+
+0        No operational role at all (product, tech or marketing only).
+         Reference: Vikram, Rahul.
+
+1        Worked on operations from a desk (integrations, analytics,
+         dashboards) without handling transactions.
+         Reference: Preetham (logistics APIs).
+
+2        Handled live transactions in any operations-heavy domain, but
+         no volumes or counterparties are named.
+
+3 (PM)   Names volumes AND counterparties (carriers, CHAs, customs,
+         ports, clients).
+         Reference: Rohan "180+ shipments monthly";
+         Lavanya "800+ shipments monthly".
+
+3 (SPM)  The PM-level 3, plus they were the coordination point across
+         3 or more types of external party.
+         Reference: Sunita "Primary coordination point between...
+         customs brokers (CHAs), freight agents, port authorities,
+         and the DGFT office".
+
+Counts:    Pre-PM careers, family businesses, consulting, and CS or
+           sales roles with an operations load. Freight, warehousing,
+           FMCG distribution, field ops, fulfilment and pharma logistics
+           all qualify.
+
+Look for:  "shipments monthly", "coordinated with", "holds",
+           "exceptions", "clearance", named counterparties.
+
+
+---------------------------------------------------------------------
+B. UNPROMPTED FIX, ADOPTED BY OTHERS
+---------------------------------------------------------------------
+
+0        Nothing built beyond assigned work.
+
+1        Built something, but it was in their assigned remit or there
+         is no adoption evidence.
+         Reference: Preetham (monitoring dashboard); Rahul (case
+         studies).
+
+2        Unprompted fix, adopted within their own team only.
+         Reference: Vikram (PRD template).
+
+3 (PM)   Triggered by a breakdown they noticed, then adopted by others,
+         with a number or "became standard".
+         Reference: Rohan's tracker "adopted across the 12-member
+         operations team within two weeks".
+
+3 (SPM)  The fix outgrew where it started: it became a platform
+         feature, or other teams or clients adopted it.
+         Reference: Rohan's BoL module "now a core platform feature";
+         Lavanya's dashboard "adopted by 2 other regional teams".
+
+Look for:  "after noticing/finding", "adopted by", "became the
+           standard", "now used by", "retained permanently".
+
+
+---------------------------------------------------------------------
+C. RESOLVES LIVE BREAKDOWNS PERSONALLY
+---------------------------------------------------------------------
+
+0        No incident mentioned.
+         Reference: Vikram, Rahul.
+
+1        Generic claims like "on-call" or "escalation management" with
+         no specific case.
+
+2        A specific incident resolved within their assigned role or
+         rota, with an outcome.
+         Reference: Preetham (coupon bug patched within 48 hours).
+
+3 (PM)   An unscheduled breakdown they owned end to end, with the
+         outcome stated.
+         Reference: Meghna (customs hold resolved overnight, shipment
+         departed on schedule); Sunita (workflow rebuilt over a weekend
+         when the FMS vendor changed format without notice).
+
+3 (SPM)  A high-stakes, hard-to-reverse event (migration, cutover,
+         outage, inspection) where they were the final decision-maker,
+         with the consequence stated.
+         Reference: Rohan (vendor migration "with no data loss");
+         Lavanya (outage post-mortem owned to closure).
+
+
+---------------------------------------------------------------------
+D. ABSORBS EXTRA LOAD WITHOUT ASKING FOR MORE PEOPLE
+---------------------------------------------------------------------
+
+0        Nothing, or they grew their team to handle the load.
+         Reference: Rahul (hired a team of 4).
+
+1        Claims like "high-volume" or "fast-paced" only.
+
+2        Took on extra scope, but it was brief or no outcome is stated.
+         Reference: Lavanya (sole PM across 3 product areas).
+
+3 (PM)   Explicitly took on extra volume or accounts with no added
+         headcount, and the outcome held.
+         Reference: Meghna (8 extra accounts for 3 months, "no churn").
+
+3 (SPM)  The same, sustained for 6 months or more.
+         Reference: Rohan ("18-month period... no additional headcount
+         added").
+
+
+=====================================================================
+WEIGHTS AND BANDS
+=====================================================================
+
+              A      B      C      D     Shortlist  Second look  Decline
+PM           30%    30%    25%    15%      >= 65      40 - 64      < 40
+SPM          25%    30%    30%    15%      >= 70      45 - 69      < 45
+
+Weights in each row add up to 100%.
+
+
+=====================================================================
+OVERRIDE RULES (these stop good CVs being auto-rejected)
+=====================================================================
+
+1. SPIKE RULE: A 3 on criterion A or B guarantees at least a second
+   look, whatever the total.
+
+2. UNCLEAR RULE: Two or more "?" marks means a second look, whatever
+   the total.
+
+3. CROSS-ROUTE RULE: An SPM applicant who misses the SPM shortlist but
+   scores 65 or more on the PM rubric goes to the PM shortlist. A PM
+   applicant who scores 70 or more on the SPM rubric gets flagged for
+   SPM.
+
+4. NO HARD FILTERS on years, title, degree or industry label, including
+   the year ranges in the job descriptions.
+
+SECOND LOOK means: a second reviewer reads the full CV, re-scores only
+the "?" items, and records the decision.
+
+
+=====================================================================
+CALIBRATION CHECK: DOES THE RUBRIC PICK KARGO'S BEST HIRES?
+=====================================================================
+
+Hire (actual rating)            Rubric  A  B  C  D  Score  Band
+------------------------------  ------  -  -  -  -  -----  -----------
+Lavanya (Exceeds)               PM      3  3  3  2    95   Shortlist
+Lavanya (Exceeds)               SPM     3  3  3  2    95   Shortlist *
+Rohan (Exceeds, no PM title)    SPM     3  3  3  3   100   Shortlist
+Vikram (Meets)                  PM      0  2  0  0    20   Decline
+Preetham (Below)                PM      1  1  2  0    37   Decline
+Rahul (Meets)                   PM      0  1  0  0    10   Decline
+
+* Despite only 2 years as a PM.
+
+The rubric separates the groups cleanly. It also passes the two
+profiles a conventional screen would reject: Rohan (no PM title) and
+Lavanya for SPM (too few years).
+
+
+=====================================================================
+INTERVIEW PROBES (use when a score is 1 or "?")
+=====================================================================
+
+A  "Walk me through a normal day in that operations role. Who did you
+   deal with, and how many shipments or cases?"
+
+B  "What's something you built that nobody asked for? Who uses it now?"
+
+C  "Tell me about the worst thing that broke on your watch. What did you
+   do in the first hour?"
+
+D  "When did your workload jump without extra people? What did you
+   change to cope?"
+
+
+=====================================================================
+SCORECARD (one row per candidate)
+=====================================================================
+
+Candidate:
+Role applied for:        PM / SPM
+A score + evidence:
+B score + evidence:
+C score + evidence:
+D score + evidence:
+"?" count:
+Total:
+Band:                    Shortlist / Second look / Decline
+Override used:           None / Spike / Unclear / Cross-route
+Decision + date:
