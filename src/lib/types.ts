@@ -76,6 +76,7 @@ export interface CandidateRow {
   brief: Brief | null;
   decision: "advance" | "pass" | null;
   decided_at: string | null;
+  decision_note: string | null;
   created_at: string;
 }
 

@@ -4,6 +4,7 @@ import { assessCv, findEmail } from "./assess";
 import { writeBrief } from "./brief";
 import { draftEmail } from "./email";
 import { evaluate } from "./rubric";
+import { advanceReason, passReasons } from "./signals";
 import { check, db } from "./supabase";
 import type { CandidateRow, EmailRow, PastHireRow, Role } from "./types";
 
@@ -83,9 +84,12 @@ export async function ingestCv(opts: { cvText: string; fileName: string; role: R
 }
 
 /** Record Advance/Pass and draft the matching email. Sending happens after the undo window. */
-export async function decide(id: string, decision: "advance" | "pass"): Promise<EmailRow> {
+export async function decide(id: string, decision: "advance" | "pass", note?: string): Promise<EmailRow> {
   const c = check(await db().from("candidates").select("*").eq("id", id).single()) as CandidateRow;
   if (c.status !== "scored") throw new Error("Candidate has not been scored yet.");
+  const role = c.list_role ?? c.role_applied;
+  const reason =
+    note?.trim() || (decision === "advance" ? advanceReason(c.assessment, role) : passReasons(c.assessment, role, c.band)[0]);
 
   const existing = check(
     await db().from("emails").select("*").eq("candidate_id", id).maybeSingle(),
@@ -103,6 +107,7 @@ export async function decide(id: string, decision: "advance" | "pass"): Promise<
       .select("id")
       .single(),
   );
+  await setDecisionNote(id, reason);
   return check(
     await db()
       .from("emails")
@@ -115,6 +120,35 @@ export async function decide(id: string, decision: "advance" | "pass"): Promise<
   ) as EmailRow;
 }
 
+/** Decide several candidates at once (bulk Pass / Advance), four email drafts at a time. */
+export async function decideMany(
+  ids: string[],
+  decision: "advance" | "pass",
+): Promise<{ candidateId: string; emailId?: string; error?: string }[]> {
+  const results: { candidateId: string; emailId?: string; error?: string }[] = [];
+  const queue = [...ids];
+  await Promise.all(
+    Array.from({ length: 4 }, async () => {
+      while (queue.length) {
+        const id = queue.shift()!;
+        try {
+          const email = await decide(id, decision);
+          results.push({ candidateId: id, emailId: email.id });
+        } catch (e) {
+          results.push({ candidateId: id, error: e instanceof Error ? e.message : String(e) });
+        }
+      }
+    }),
+  );
+  return results;
+}
+
+/** Store why a decision was made. Tolerates the column not existing yet (migration 002). */
+export async function setDecisionNote(id: string, note: string): Promise<boolean> {
+  const { error } = await db().from("candidates").update({ decision_note: note.slice(0, 300) }).eq("id", id);
+  return !error;
+}
+
 /** Undo a decision while its email is still unsent. */
 export async function undoDecision(id: string): Promise<void> {
   const email = check(
@@ -123,6 +157,7 @@ export async function undoDecision(id: string): Promise<void> {
   if (email?.status === "sent") throw new Error("The email has already been sent, so this can't be undone.");
   if (email) check(await db().from("emails").delete().eq("id", email.id).select("id"));
   check(await db().from("candidates").update({ decision: null, decided_at: null }).eq("id", id).select("id"));
+  await db().from("candidates").update({ decision_note: null }).eq("id", id);
 }
 
 /** Score every past hire with the same scorer, to check the rubric separates thriving hires. */

@@ -48,6 +48,7 @@ create table if not exists candidates (
 
   decision      text check (decision in ('advance', 'pass')),
   decided_at    timestamptz,
+  decision_note text,           -- why: pre-filled from the scorecard, editable
   created_at    timestamptz not null default now(),
   unique (role_applied, cv_hash)
 );
