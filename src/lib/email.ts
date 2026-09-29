@@ -37,7 +37,7 @@ function templateEmail(c: CandidateRow, kind: "invite" | "rejection"): { subject
   if (kind === "invite") {
     const link = env.schedulingLink();
     return {
-      subject: `${company}: next step for the ${role} role`,
+      subject: `Interview invitation: ${role} at ${company}`,
       body: [
         `Hi ${name},`,
         `Thank you for applying for the ${role} role at ${company}. I've read your CV and I'd like to talk.`,
@@ -51,7 +51,7 @@ function templateEmail(c: CandidateRow, kind: "invite" | "rejection"): { subject
     };
   }
   return {
-    subject: `Your application for ${role} at ${company}`,
+    subject: `Update on your application: ${role} at ${company}`,
     body: [
       `Hi ${name},`,
       `Thank you for applying for the ${role} role at ${company}, and for the time you put into it.`,
@@ -102,8 +102,9 @@ export async function draftEmail(c: CandidateRow, kind: "invite" | "rejection"):
       schema: SCHEMA,
       temperature: 0.4,
     });
-    if (!res.subject?.trim() || !res.body?.trim()) return fallback;
-    return { subject: res.subject.trim(), body: res.body.trim() };
+    if (!res.body?.trim()) return fallback;
+    // Fixed subjects, so invites and rejections are never confused in an inbox.
+    return { subject: fallback.subject, body: res.body.trim() };
   } catch {
     return fallback;
   }
