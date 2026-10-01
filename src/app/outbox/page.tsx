@@ -17,7 +17,7 @@ export default async function OutboxPage() {
   return (
     <div className="space-y-5">
       <PageHeader
-        eyebrow={enabled ? "Emails send automatically after Advance or Pass" : "Sending is off: RESEND_API_KEY isn't set"}
+        eyebrow={enabled ? "Each email is reviewed by you before it's sent" : "Sending is off: RESEND_API_KEY isn't set"}
         title="Outbox"
       >
         {enabled && unsent > 0 && (
@@ -41,7 +41,7 @@ export default async function OutboxPage() {
       {emails.length === 0 ? (
         <Card>
           <p className="font-display text-lg">No emails yet</p>
-          <p className="mt-1 text-sm text-muted">They appear here when you Advance or Pass a candidate.</p>
+          <p className="mt-1 text-sm text-muted">They appear here when you advance a candidate to interview or reject them.</p>
         </Card>
       ) : (
         <OutboxList emails={emails} />

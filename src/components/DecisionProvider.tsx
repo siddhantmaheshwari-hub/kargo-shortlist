@@ -104,7 +104,7 @@ export function DecisionProvider({ children }: { children: React.ReactNode }) {
 
   const decide = useCallback(
     async (ids: string[], decision: Decision, opts: DecideOptions) => {
-      const verb = decision === "advance" ? "Advancing" : "Passing";
+      const verb = decision === "advance" ? "Inviting" : "Rejecting";
       const who = ids.length === 1 ? opts.names[0] : plural(ids.length, "candidate");
       const working = push({
         tone: "neutral",
@@ -338,8 +338,8 @@ function ReviewDialog({
       <div role="dialog" aria-modal="true" aria-labelledby="review-title" className="card w-full max-w-2xl bg-surface-solid p-0">
         <div className="flex items-start justify-between gap-3 border-b border-line px-5 py-4 sm:px-6">
           <div>
-            <p className={`text-xs font-medium ${isInvite ? "text-good" : "text-muted"}`}>
-              {isInvite ? "Advanced" : "Passed"} · {review.sendingEnabled ? "nothing is sent until you press Send" : "sending is off, this will be saved as a draft"}
+            <p className={`text-xs font-medium ${isInvite ? "text-good" : "text-bad"}`}>
+              {isInvite ? "Invited to interview" : "Rejected"} · {review.sendingEnabled ? "nothing is sent until you press Send" : "sending is off, this will be saved as a draft"}
             </p>
             <h2 id="review-title" className="mt-0.5 font-display text-xl font-medium">
               Review {many ? `${review.items.length} ${isInvite ? "invites" : "rejections"}` : isInvite ? "the interview invite" : "the rejection email"}
@@ -353,7 +353,7 @@ function ReviewDialog({
         <div className="max-h-[65vh] space-y-4 overflow-y-auto px-5 py-4 sm:px-6">
           {review.reasons && (
             <div>
-              <p className="text-xs text-faint">Reason for passing (recorded for you, never sent to the candidate)</p>
+              <p className="text-xs text-faint">Reason for rejecting (recorded for you, never sent to the candidate)</p>
               <div className="mt-1.5 flex flex-wrap gap-1.5">
                 {review.reasons.map((r) => (
                   <button

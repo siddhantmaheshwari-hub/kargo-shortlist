@@ -31,7 +31,7 @@ function ago(iso: string): string {
 const ACTIVITY_ICON: Record<ActivityItem["kind"], { icon: typeof Check; cls: string }> = {
   scored: { icon: Sparkles, cls: "bg-sunk text-ink-2" },
   advanced: { icon: Check, cls: "bg-good-bg text-good" },
-  passed: { icon: X, cls: "bg-sunk text-muted" },
+  passed: { icon: X, cls: "bg-bad-bg text-bad" },
   sent: { icon: Mail, cls: "bg-info-bg text-info" },
   draft: { icon: Mail, cls: "bg-warn-bg text-warn" },
   failed: { icon: Mail, cls: "bg-bad-bg text-bad" },
@@ -50,7 +50,7 @@ function RoleCard({ role, s }: { role: Role; s: RoleStats }) {
         <div>
           <h2 className="font-display text-xl font-medium">{meta.title}</h2>
           <p className="text-sm text-muted">
-            {s.total} scored · {s.advanced} advanced
+            {s.total} scored · {s.advanced} invited · {s.rejected} rejected
           </p>
         </div>
         <Link

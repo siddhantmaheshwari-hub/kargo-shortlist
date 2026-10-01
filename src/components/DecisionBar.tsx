@@ -25,7 +25,7 @@ export function Kbd({ children }: { children: React.ReactNode }) {
   );
 }
 
-/** Advance / Pass, or the recorded decision with Undo while the email is unsent. */
+/** Advance to interview / Reject, or the recorded decision with Undo while the email is unsent. */
 export function DecisionBar({ c, showKeys = false }: { c: DecisionTarget; showKeys?: boolean }) {
   const router = useRouter();
   const { decide, busyIds, notify, openReview } = useDecisions();
@@ -48,11 +48,11 @@ export function DecisionBar({ c, showKeys = false }: { c: DecisionTarget; showKe
       <div className="flex flex-wrap items-center gap-3">
         <span
           className={`inline-flex h-10 items-center gap-2 rounded-full px-4 text-sm font-medium ${
-            advanced ? "bg-good-bg text-good" : "bg-sunk text-ink-2"
+            advanced ? "bg-good-bg text-good" : "bg-bad-bg text-bad"
           }`}
         >
           {advanced ? <Check className="size-4" /> : <X className="size-4" />}
-          {advanced ? "Advanced" : "Passed"}
+          {advanced ? "Invited to interview" : "Rejected"}
         </span>
         <span className="min-w-0 text-sm text-muted">
           {c.decision_note && <span className="text-ink-2">{c.decision_note} · </span>}
@@ -97,8 +97,9 @@ export function DecisionBar({ c, showKeys = false }: { c: DecisionTarget; showKe
         onClick={() => decide([c.id], "pass", { names: [c.name], reasons: passReasons(c.assessment, c.role, c.band) })}
         className="inline-flex h-11 items-center gap-2 rounded-full border border-line-strong bg-surface-solid px-5 text-sm font-medium transition hover:bg-sunk disabled:opacity-50"
       >
-        Pass
-        {showKeys && <Kbd>P</Kbd>}
+        <X className="size-4" />
+        Reject
+        {showKeys && <Kbd>R</Kbd>}
       </button>
       {!c.email && <span className="text-xs text-warn">No email on CV: the follow-up will be saved as a draft</span>}
     </div>

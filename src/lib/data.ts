@@ -101,6 +101,7 @@ export interface RoleStats {
   decline: number;
   undecided: number;
   advanced: number;
+  rejected: number;
   topUndecided: { id: string; name: string; band: Band | null; total: number | null } | null;
 }
 
@@ -115,7 +116,7 @@ export interface ActivityItem {
 export async function overview(): Promise<{ stats: Record<Role, RoleStats>; activity: ActivityItem[]; calibrated: number }> {
   await connection();
   const rows = stripCv(check(await db().from("candidates").select("*").eq("status", "scored")) as CandidateRow[]);
-  const blank = (): RoleStats => ({ total: 0, shortlist: 0, secondLook: 0, decline: 0, undecided: 0, advanced: 0, topUndecided: null });
+  const blank = (): RoleStats => ({ total: 0, shortlist: 0, secondLook: 0, decline: 0, undecided: 0, advanced: 0, rejected: 0, topUndecided: null });
   const stats: Record<Role, RoleStats> = { PM: blank(), SPM: blank() };
   for (const role of ["PM", "SPM"] as Role[]) {
     const list = rows.filter((r) => r.list_role === role).sort(rankCompare);
@@ -127,6 +128,7 @@ export async function overview(): Promise<{ stats: Record<Role, RoleStats>; acti
       else s.decline++;
       if (!r.decision) s.undecided++;
       if (r.decision === "advance") s.advanced++;
+      if (r.decision === "pass") s.rejected++;
     }
     const top = list.find((r) => !r.decision);
     s.topUndecided = top ? { id: top.id, name: top.name, band: top.band, total: top.total } : null;
@@ -146,7 +148,7 @@ export async function overview(): Promise<{ stats: Record<Role, RoleStats>; acti
         kind: r.decision === "advance" ? "advanced" : "passed",
         candidateId: r.id,
         name: r.name,
-        detail: r.decision_note ?? (r.decision === "advance" ? "Advanced" : "Passed"),
+        detail: `${r.decision === "advance" ? "Invited to interview" : "Rejected"}${r.decision_note ? ` · ${r.decision_note}` : ""}`,
       });
     }
   }

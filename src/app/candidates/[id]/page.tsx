@@ -55,7 +55,7 @@ export default async function CandidatePage(props: PageProps<"/candidates/[id]">
                 </>
               ) : (
                 <p className="text-sm text-muted">
-                  Written automatically when you Advance or Pass: an interview invite, or a respectful rejection. It never mentions scores.
+                  Written for you when you choose Advance to interview (an invite) or Reject (a respectful rejection). You review it before it&apos;s sent, and it never mentions scores.
                 </p>
               )}
             </div>

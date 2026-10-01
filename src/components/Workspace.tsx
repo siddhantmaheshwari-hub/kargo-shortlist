@@ -173,7 +173,7 @@ export function Workspace({
         searchRef.current?.focus();
       } else if (e.key === "a" && selected) {
         decideOne(selected, "advance");
-      } else if (e.key === "p" && selected) {
+      } else if (e.key === "r" && selected) {
         decideOne(selected, "pass");
       } else if (e.key === "x" && selected) {
         toggleCheck(selected.id);
@@ -223,8 +223,8 @@ export function Workspace({
             {(
               [
                 ["todo", "To decide"],
-                ["advance", "Advanced"],
-                ["pass", "Passed"],
+                ["advance", "Invited"],
+                ["pass", "Rejected"],
                 ["all", "All"],
               ] as [Status, string][]
             ).map(([k, label]) => (
@@ -347,7 +347,7 @@ export function Workspace({
                 {confirmBulk ? (
                   <>
                     <span>
-                      {confirmBulk === "pass" ? "Pass" : "Advance"} {checkedUndecided.length} and draft {checkedUndecided.length}{" "}
+                      {confirmBulk === "pass" ? "Reject" : "Invite"} {checkedUndecided.length} and draft {checkedUndecided.length}{" "}
                       {confirmBulk === "pass" ? "rejection" : "invite"} email{checkedUndecided.length === 1 ? "" : "s"}?
                     </span>
                     <button onClick={() => runBulk(confirmBulk)} className="rounded-full bg-ink px-3 py-1 text-xs font-medium text-white">
@@ -370,11 +370,11 @@ export function Workspace({
                     </button>
                     {checkedUndecided.length > 0 && (
                       <>
-                        <button onClick={() => setConfirmBulk("advance")} className="rounded-full border border-line px-3 py-1 text-xs">
-                          Advance
+                        <button onClick={() => setConfirmBulk("advance")} className="rounded-full border border-line px-3 py-1 text-xs text-good">
+                          Advance to interview
                         </button>
-                        <button onClick={() => setConfirmBulk("pass")} className="rounded-full border border-line px-3 py-1 text-xs">
-                          Pass
+                        <button onClick={() => setConfirmBulk("pass")} className="rounded-full border border-line px-3 py-1 text-xs text-bad">
+                          Reject
                         </button>
                       </>
                     )}
@@ -387,8 +387,8 @@ export function Workspace({
             ) : (
               <div className="flex flex-1 items-center justify-between">
                 <span>Ranked by band, then score</span>
-                <span className="hidden items-center gap-1 xl:inline-flex" title="J/K move · A advance · P pass · X select · / search">
-                  <Keyboard className="size-3.5" /> J K · A · P · X
+                <span className="hidden items-center gap-1 xl:inline-flex" title="J/K move · A advance to interview · R reject · X select · / search">
+                  <Keyboard className="size-3.5" /> J K · A · R · X
                 </span>
               </div>
             )}
@@ -448,8 +448,8 @@ export function Workspace({
                       <p className="truncate text-xs text-muted">
                         {c.decision
                           ? c.decision === "advance"
-                            ? "Advanced"
-                            : "Passed"
+                            ? "✓ Invited to interview"
+                            : "✕ Rejected"
                           : warn.length
                             ? warn.map((w) => w.label).join(" · ")
                             : c.location ?? (r !== c.role_applied ? `Moved from ${c.role_applied}` : "No flags")}
@@ -528,7 +528,7 @@ function Compare({ list, role, onClose }: { list: WorkspaceCandidate[]; role: Ro
                 ))}
                 <p className="text-xs text-faint">
                   {role === r ? "" : `On the ${r} list · `}
-                  {c.decision ? (c.decision === "advance" ? "Advanced" : "Passed") : "Undecided"}
+                  {c.decision ? (c.decision === "advance" ? "Invited to interview" : "Rejected") : "Undecided"}
                 </p>
               </div>
             );

@@ -2,8 +2,8 @@
 
 Ranks Product Manager and Senior PM candidates for Kargo against the pattern Kargo's best past hires
 share, instead of against the JD. For each candidate it writes a brief (who they are, why they ranked
-there, what to probe). Arjun clicks **Advance** or **Pass**, and the invite or rejection email is
-drafted and sent.
+there, what to probe). Arjun clicks **Advance to interview** or **Reject**, reviews the invite or rejection email, and it is
+sent.
 
 Stack: Next.js 16 (App Router) · Supabase (Postgres) · Gemini · Resend · Vercel.
 
@@ -36,8 +36,8 @@ The pattern is `rubric.txt` (Kargo CV Scoring Rubric v2), learned from the 8 pas
 
 ## Emails
 
-Clicking Advance or Pass drafts the email (Gemini, with a template fallback) and sends it after an
-8-second undo window. **With `RESEND_API_KEY` blank, every email is saved as a draft** in `/outbox`.
+Clicking Advance to interview or Reject drafts the email (Gemini, with a template fallback) and opens it
+for review: edit it, then Send, Save as draft, or Cancel the decision. **With `RESEND_API_KEY` blank, every email is saved as a draft** in `/outbox`.
 Once you add the key, use "Send unsent" there. Set `TEST_RECIPIENT_EMAIL` to redirect all mail to
 yourself while testing. Resend's `onboarding@resend.dev` sender can only deliver to your own Resend
 account address, so verify a domain before emailing real candidates.
