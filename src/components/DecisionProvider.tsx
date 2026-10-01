@@ -30,6 +30,7 @@ interface Review {
   decision: Decision;
   items: ReviewItem[];
   sendingEnabled: boolean;
+  testRecipient: string | null;
   reasons?: string[];
   reason?: string;
   failed: string[]; // candidates whose email couldn't be drafted
@@ -116,20 +117,23 @@ export function DecisionProvider({ children }: { children: React.ReactNode }) {
       const items: ReviewItem[] = [];
       const failed: string[] = [];
       let sendingEnabled = false;
+      let testTo: string | null = null;
       try {
         if (ids.length === 1) {
-          const r = await call<{ email: EmailRow; sendingEnabled: boolean }>(`/api/candidates/${ids[0]}/decision`, {
+          const r = await call<{ email: EmailRow; sendingEnabled: boolean; testRecipient: string | null }>(`/api/candidates/${ids[0]}/decision`, {
             decision,
             note: opts.reasons?.[0],
           });
           items.push(toItem(r.email, opts.names[0]));
           sendingEnabled = r.sendingEnabled;
+          testTo = r.testRecipient;
         } else {
-          const r = await call<{ results: { candidateId: string; email?: EmailRow; error?: string }[]; sendingEnabled: boolean }>(
+          const r = await call<{ results: { candidateId: string; email?: EmailRow; error?: string }[]; sendingEnabled: boolean; testRecipient: string | null }>(
             `/api/decisions`,
             { ids, decision },
           );
           sendingEnabled = r.sendingEnabled;
+          testTo = r.testRecipient;
           for (const x of r.results) {
             const name = opts.names[ids.indexOf(x.candidateId)] ?? "Candidate";
             if (x.email) items.push(toItem(x.email, name));
@@ -153,7 +157,7 @@ export function DecisionProvider({ children }: { children: React.ReactNode }) {
         return false;
       }
       const reasons = ids.length === 1 && decision === "pass" ? opts.reasons : undefined;
-      setReview({ decision, items, sendingEnabled, reasons, reason: reasons?.[0], failed });
+      setReview({ decision, items, sendingEnabled, testRecipient: testTo, reasons, reason: reasons?.[0], failed });
       return true;
     },
     [push, dismiss, notify, router],
@@ -162,7 +166,7 @@ export function DecisionProvider({ children }: { children: React.ReactNode }) {
   const openReview = useCallback(
     async (candidateId: string, name: string) => {
       try {
-        const r = await call<{ email: EmailRow; sendingEnabled: boolean }>(`/api/candidates/${candidateId}/email`, undefined, "GET");
+        const r = await call<{ email: EmailRow; sendingEnabled: boolean; testRecipient: string | null }>(`/api/candidates/${candidateId}/email`, undefined, "GET");
         if (r.email.status === "sent") {
           notify("Already sent", "This email has already gone to the candidate.");
           return;
@@ -171,6 +175,7 @@ export function DecisionProvider({ children }: { children: React.ReactNode }) {
           decision: r.email.kind === "invite" ? "advance" : "pass",
           items: [toItem(r.email, name)],
           sendingEnabled: r.sendingEnabled,
+          testRecipient: r.testRecipient,
           failed: [],
         });
       } catch (e) {
@@ -294,7 +299,11 @@ function ReviewDialog({
         "bad",
       );
     } else if (sent) {
-      notify(`${plural(sent, "email")} sent`, isInvite ? "The interview invite is on its way." : "The candidate has been told, respectfully.", "good");
+      notify(
+        `${plural(sent, "email")} sent`,
+        review.testRecipient ? `Test mode: delivered to ${review.testRecipient}` : isInvite ? "The interview invite is on its way." : "The candidate has been told, respectfully.",
+        "good",
+      );
     } else if (drafts) {
       notify(drafts === 1 ? "Saved as draft" : `Saved as ${drafts} drafts`, "Sending is off until RESEND_API_KEY is set.");
     }
@@ -359,6 +368,15 @@ function ReviewDialog({
                 ))}
               </div>
             </div>
+          )}
+
+          {review.sendingEnabled && review.testRecipient && (
+            <p className="flex items-start gap-2 rounded-2xl bg-info-bg px-3 py-2 text-sm text-info">
+              <Mail className="mt-0.5 size-4 shrink-0" />
+              <span>
+                Test mode: this will be delivered to <b>{review.testRecipient}</b>, not the candidate. The subject will show who it was meant for.
+              </span>
+            </p>
           )}
 
           {review.failed.length > 0 && (

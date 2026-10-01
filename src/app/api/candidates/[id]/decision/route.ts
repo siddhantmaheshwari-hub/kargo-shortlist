@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { emailSendingEnabled } from "@/lib/email";
+import { emailSendingEnabled, testRecipient } from "@/lib/email";
 import { decide } from "@/lib/pipeline";
 
 export const maxDuration = 60;
@@ -14,7 +14,7 @@ export async function POST(req: Request, ctx: RouteContext<"/api/candidates/[id]
       return NextResponse.json({ error: "decision must be advance or pass" }, { status: 400 });
     }
     const email = await decide(id, decision, typeof note === "string" ? note : undefined);
-    return NextResponse.json({ email, sendingEnabled: emailSendingEnabled() });
+    return NextResponse.json({ email, sendingEnabled: emailSendingEnabled(), testRecipient: testRecipient() });
   } catch (e) {
     return NextResponse.json({ error: e instanceof Error ? e.message : String(e) }, { status: 500 });
   }

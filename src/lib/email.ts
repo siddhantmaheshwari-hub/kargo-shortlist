@@ -114,6 +114,11 @@ export function emailSendingEnabled(): boolean {
   return Boolean(env.resendKey());
 }
 
+/** Where emails really go while TEST_RECIPIENT_EMAIL is set (null = to the candidate). */
+export function testRecipient(): string | null {
+  return env.testRecipient() || null;
+}
+
 export interface EmailEdits {
   subject?: unknown;
   body?: unknown;
