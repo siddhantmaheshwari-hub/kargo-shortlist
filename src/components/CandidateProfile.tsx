@@ -187,9 +187,10 @@ export function CandidateProfile({
         </div>
       )}
 
-      {c.brief && c.brief.probes.length > 0 && (
+      {/* Interview questions only matter once someone is invited to interview. */}
+      {c.decision === "advance" && c.brief && c.brief.probes.length > 0 && (
         <div className="card p-5 sm:p-6">
-          <SectionTitle>Ask in the interview</SectionTitle>
+          <SectionTitle>Interview questions</SectionTitle>
           <ol className="space-y-3">
             {c.brief.probes.map((p, i) => (
               <li key={i} className="flex gap-3">
