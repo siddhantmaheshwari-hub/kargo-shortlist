@@ -18,13 +18,40 @@ function stripCv(rows: CandidateRow[]): Omit<CandidateRow, "cv_text">[] {
   });
 }
 
-async function withEmailStatus(rows: Omit<CandidateRow, "cv_text">[]): Promise<ListCandidate[]> {
-  if (!rows.length) return [];
-  const emails = check(
-    await db().from("emails").select("candidate_id,status").in("candidate_id", rows.map((r) => r.id)),
-  ) as { candidate_id: string; status: EmailRow["status"] }[];
+type EmailStatusRow = { candidate_id: string; status: EmailRow["status"] };
+
+function withEmailStatus(rows: Omit<CandidateRow, "cv_text">[], emails: EmailStatusRow[]): ListCandidate[] {
   const byId = new Map(emails.map((e) => [e.candidate_id, e.status]));
   return rows.map((r) => ({ ...r, email_status: byId.get(r.id) ?? null }));
+}
+
+// The database is in another region from some deployments, so every page fetches
+// what it needs in ONE parallel round of queries rather than one after another.
+async function fetchWorkspaceData() {
+  const [all, emails, hires] = await Promise.all([
+    db().from("candidates").select("*").then((r) => check(r) as CandidateRow[]),
+    db().from("emails").select("candidate_id,status").then((r) => check(r) as EmailStatusRow[]),
+    db()
+      .from("past_hires")
+      .select("name,rating,thriving,assessment")
+      .not("assessment", "is", null)
+      .then((r) => check(r) as HireSummary[]),
+  ]);
+  return { all, emails, hires };
+}
+
+function buildWorkspace(role: Role, data: Awaited<ReturnType<typeof fetchWorkspaceData>>) {
+  const { all, emails, hires } = data;
+  const mine = all.filter((c) => (c.list_role ?? c.role_applied) === role);
+  const rows = withEmailStatus(stripCv(mine), emails);
+  const other: Role = role === "PM" ? "SPM" : "PM";
+  return {
+    ranked: rows.filter((c) => c.status === "scored").sort(rankCompare),
+    pending: rows.filter((c) => c.status !== "scored"),
+    flaggedForSpm: all.filter((c) => c.flagged_spm && c.status === "scored").length,
+    otherRoleUndecided: all.filter((c) => (c.list_role ?? c.role_applied) === other && c.status === "scored" && !c.decision).length,
+    hires,
+  };
 }
 
 /** Everyone on a role's list, best first, plus the counts the workspace header needs. */
@@ -36,20 +63,7 @@ export async function workspace(role: Role): Promise<{
   hires: HireSummary[];
 }> {
   await connection();
-  const all = check(await db().from("candidates").select("*")) as CandidateRow[];
-  const mine = all.filter((c) => (c.list_role ?? c.role_applied) === role);
-  const rows = await withEmailStatus(stripCv(mine));
-  const other: Role = role === "PM" ? "SPM" : "PM";
-  const hires = check(
-    await db().from("past_hires").select("name,rating,thriving,assessment").not("assessment", "is", null),
-  ) as HireSummary[];
-  return {
-    ranked: rows.filter((c) => c.status === "scored").sort(rankCompare),
-    pending: rows.filter((c) => c.status !== "scored"),
-    flaggedForSpm: all.filter((c) => c.flagged_spm && c.status === "scored").length,
-    otherRoleUndecided: all.filter((c) => (c.list_role ?? c.role_applied) === other && c.status === "scored" && !c.decision).length,
-    hires,
-  };
+  return buildWorkspace(role, await fetchWorkspaceData());
 }
 
 export async function getCandidate(id: string): Promise<{
@@ -60,16 +74,19 @@ export async function getCandidate(id: string): Promise<{
   hires: HireSummary[];
 } | null> {
   await connection();
-  const candidate = check(await db().from("candidates").select("*").eq("id", id).maybeSingle()) as CandidateRow | null;
+  const [data, email] = await Promise.all([
+    fetchWorkspaceData(),
+    db().from("emails").select("*").eq("candidate_id", id).maybeSingle().then((r) => check(r) as EmailRow | null),
+  ]);
+  const candidate = data.all.find((c) => c.id === id) ?? null;
   if (!candidate) return null;
   candidate.decision_note = candidate.decision_note ?? null;
-  const email = check(await db().from("emails").select("*").eq("candidate_id", id).maybeSingle()) as EmailRow | null;
 
   let rank: number | null = null;
   let listSize = 0;
-  let hires: HireSummary[] = [];
+  let hires: HireSummary[] = data.hires;
   if (candidate.status === "scored" && candidate.list_role) {
-    const ws = await workspace(candidate.list_role);
+    const ws = buildWorkspace(candidate.list_role, data);
     listSize = ws.ranked.length;
     hires = ws.hires;
     const i = ws.ranked.findIndex((r) => r.id === id);
@@ -85,11 +102,11 @@ export async function pastHires(): Promise<PastHireRow[]> {
 
 export async function outbox(): Promise<(EmailRow & { candidate_name: string })[]> {
   await connection();
-  const emails = check(await db().from("emails").select("*").order("created_at", { ascending: false })) as EmailRow[];
+  const [emails, names] = await Promise.all([
+    db().from("emails").select("*").order("created_at", { ascending: false }).then((r) => check(r) as EmailRow[]),
+    db().from("candidates").select("id,name").then((r) => check(r) as { id: string; name: string }[]),
+  ]);
   if (!emails.length) return [];
-  const names = check(
-    await db().from("candidates").select("id,name").in("id", emails.map((e) => e.candidate_id)),
-  ) as { id: string; name: string }[];
   const byId = new Map(names.map((n) => [n.id, n.name]));
   return emails.map((e) => ({ ...e, candidate_name: byId.get(e.candidate_id) ?? "Unknown" }));
 }
@@ -115,7 +132,15 @@ export interface ActivityItem {
 
 export async function overview(): Promise<{ stats: Record<Role, RoleStats>; activity: ActivityItem[]; calibrated: number }> {
   await connection();
-  const rows = stripCv(check(await db().from("candidates").select("*").eq("status", "scored")) as CandidateRow[]);
+  const [scored, emails, calibrated] = await Promise.all([
+    db().from("candidates").select("*").eq("status", "scored").then((r) => check(r) as CandidateRow[]),
+    db()
+      .from("emails")
+      .select("candidate_id,status,kind,sent_at,created_at")
+      .then((r) => check(r) as Pick<EmailRow, "candidate_id" | "status" | "kind" | "sent_at" | "created_at">[]),
+    db().from("past_hires").select("id").not("assessment", "is", null).then((r) => check(r) as { id: string }[]),
+  ]);
+  const rows = stripCv(scored);
   const blank = (): RoleStats => ({ total: 0, shortlist: 0, secondLook: 0, decline: 0, undecided: 0, advanced: 0, rejected: 0, topUndecided: null });
   const stats: Record<Role, RoleStats> = { PM: blank(), SPM: blank() };
   for (const role of ["PM", "SPM"] as Role[]) {
@@ -134,10 +159,6 @@ export async function overview(): Promise<{ stats: Record<Role, RoleStats>; acti
     s.topUndecided = top ? { id: top.id, name: top.name, band: top.band, total: top.total } : null;
   }
 
-  const emails = check(await db().from("emails").select("candidate_id,status,kind,sent_at,created_at")) as Pick<
-    EmailRow,
-    "candidate_id" | "status" | "kind" | "sent_at" | "created_at"
-  >[];
   const nameOf = new Map(rows.map((r) => [r.id, r.name]));
   const activity: ActivityItem[] = [];
   for (const r of rows) {
@@ -159,7 +180,6 @@ export async function overview(): Promise<{ stats: Record<Role, RoleStats>; acti
   }
   activity.sort((a, b) => (a.at < b.at ? 1 : -1));
 
-  const calibrated = check(await db().from("past_hires").select("id").not("assessment", "is", null)) as { id: string }[];
   return { stats, activity: activity.slice(0, 8), calibrated: calibrated.length };
 }
 
