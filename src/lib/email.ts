@@ -114,6 +114,37 @@ export function emailSendingEnabled(): boolean {
   return Boolean(env.resendKey());
 }
 
+export interface EmailEdits {
+  subject?: unknown;
+  body?: unknown;
+  to?: unknown;
+}
+
+/** Apply Arjun's edits from the review step. Sent emails can't be changed. */
+export async function updateEmailContent(emailId: string, edits: EmailEdits): Promise<EmailRow> {
+  const email = check(await db().from("emails").select("*").eq("id", emailId).single()) as EmailRow;
+  if (email.status === "sent") throw new Error("This email has already been sent.");
+
+  const patch: Partial<Pick<EmailRow, "subject" | "body" | "to_email">> = {};
+  if (typeof edits.subject === "string") {
+    const s = edits.subject.trim();
+    if (!s) throw new Error("The subject can't be empty.");
+    patch.subject = s.slice(0, 200);
+  }
+  if (typeof edits.body === "string") {
+    const b = edits.body.trim();
+    if (!b) throw new Error("The email can't be empty.");
+    patch.body = b.slice(0, 5000);
+  }
+  if (typeof edits.to === "string") {
+    const t = edits.to.trim();
+    if (t && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(t)) throw new Error("That email address doesn't look right.");
+    patch.to_email = t || null;
+  }
+  if (!Object.keys(patch).length) return email;
+  return check(await db().from("emails").update(patch).eq("id", emailId).select("*").single()) as EmailRow;
+}
+
 /**
  * Send one email through Resend. Without RESEND_API_KEY it stays a draft.
  * With TEST_RECIPIENT_EMAIL set, it goes to that address instead of the candidate.

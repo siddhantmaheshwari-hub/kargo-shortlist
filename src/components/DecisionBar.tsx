@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowRight, Check, Loader2, RotateCcw, X } from "lucide-react";
+import { ArrowRight, Check, Loader2, RotateCcw, Send, X } from "lucide-react";
 import { useDecisions } from "./DecisionProvider";
 import { passReasons } from "@/lib/signals";
 import type { Assessment, Band, EmailRow, Role } from "@/lib/types";
@@ -28,7 +28,7 @@ export function Kbd({ children }: { children: React.ReactNode }) {
 /** Advance / Pass, or the recorded decision with Undo while the email is unsent. */
 export function DecisionBar({ c, showKeys = false }: { c: DecisionTarget; showKeys?: boolean }) {
   const router = useRouter();
-  const { decide, busyIds, notify } = useDecisions();
+  const { decide, busyIds, notify, openReview } = useDecisions();
   const [undoing, setUndoing] = useState(false);
   const busy = busyIds.has(c.id);
 
@@ -59,11 +59,19 @@ export function DecisionBar({ c, showKeys = false }: { c: DecisionTarget; showKe
           {c.email_status === "sent"
             ? "Email sent"
             : c.email_status === "failed"
-              ? "Email failed, see Outbox"
+              ? "Email failed to send"
               : c.email_status === "draft"
-                ? "Email saved as draft"
+                ? "Email not sent yet"
                 : ""}
         </span>
+        {(c.email_status === "draft" || c.email_status === "failed") && (
+          <button
+            onClick={() => openReview(c.id, c.name)}
+            className="inline-flex h-9 items-center gap-1.5 rounded-full bg-ink px-4 text-sm font-medium text-white hover:bg-ink-2"
+          >
+            <Send className="size-3.5" /> Review &amp; send
+          </button>
+        )}
         {c.email_status !== "sent" && (
           <button onClick={undo} disabled={undoing} className="inline-flex items-center gap-1 text-sm text-muted underline-offset-2 hover:text-ink hover:underline">
             {undoing ? <Loader2 className="size-3.5 animate-spin" /> : <RotateCcw className="size-3.5" />} Undo

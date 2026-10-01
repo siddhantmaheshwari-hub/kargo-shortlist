@@ -72,7 +72,7 @@ export function Workspace({
   flaggedForSpm: number;
 }) {
   const router = useRouter();
-  const { decide, busyIds } = useDecisions();
+  const { decide, busyIds, reviewing } = useDecisions();
   const searchRef = useRef<HTMLInputElement>(null);
 
   const [query, setQuery] = useState("");
@@ -156,6 +156,7 @@ export function Workspace({
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
+      if (reviewing) return;
       const t = e.target as HTMLElement;
       if (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable || e.metaKey || e.ctrlKey || e.altKey) {
         if (e.key === "Escape" && t === searchRef.current) searchRef.current?.blur();
@@ -183,7 +184,7 @@ export function Workspace({
     }
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [move, selected, decideOne]);
+  }, [move, selected, decideOne, reviewing]);
 
   function toggleCheck(id: string) {
     setChecked((prev) => {

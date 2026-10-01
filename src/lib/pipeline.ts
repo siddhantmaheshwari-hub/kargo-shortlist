@@ -124,8 +124,8 @@ export async function decide(id: string, decision: "advance" | "pass", note?: st
 export async function decideMany(
   ids: string[],
   decision: "advance" | "pass",
-): Promise<{ candidateId: string; emailId?: string; error?: string }[]> {
-  const results: { candidateId: string; emailId?: string; error?: string }[] = [];
+): Promise<{ candidateId: string; email?: EmailRow; error?: string }[]> {
+  const results: { candidateId: string; email?: EmailRow; error?: string }[] = [];
   const queue = [...ids];
   await Promise.all(
     Array.from({ length: 4 }, async () => {
@@ -133,7 +133,7 @@ export async function decideMany(
         const id = queue.shift()!;
         try {
           const email = await decide(id, decision);
-          results.push({ candidateId: id, emailId: email.id });
+          results.push({ candidateId: id, email });
         } catch (e) {
           results.push({ candidateId: id, error: e instanceof Error ? e.message : String(e) });
         }

@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, Send } from "lucide-react";
+import { useDecisions } from "./DecisionProvider";
 import { Avatar, EmailStatus } from "./ui";
 import type { EmailRow } from "@/lib/types";
 
@@ -12,6 +13,7 @@ type Filter = "all" | "draft" | "sent" | "failed";
 export function OutboxList({ emails }: { emails: Row[] }) {
   const [filter, setFilter] = useState<Filter>("all");
   const [open, setOpen] = useState<string | null>(null);
+  const { openReview } = useDecisions();
   const counts = {
     all: emails.length,
     draft: emails.filter((e) => e.status === "draft").length,
@@ -75,6 +77,14 @@ export function OutboxList({ emails }: { emails: Row[] }) {
                     </Link>
                   </p>
                   <pre className="mt-3 rounded-2xl bg-sunk p-4 font-sans text-sm leading-relaxed whitespace-pre-wrap text-ink-2">{e.body}</pre>
+                  {e.status !== "sent" && (
+                    <button
+                      onClick={() => openReview(e.candidate_id, e.candidate_name)}
+                      className="mt-3 inline-flex h-10 items-center gap-2 rounded-full bg-ink px-4 text-sm font-medium text-white hover:bg-ink-2"
+                    >
+                      <Send className="size-4" /> Review &amp; send
+                    </button>
+                  )}
                 </div>
               )}
             </li>
